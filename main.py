@@ -6,6 +6,11 @@ from profanity_filter import check_profanity  # 비속어 감지 모듈 import
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'온라인 됨 {self.user}!')
+        try:
+            synced = await self.tree.sync()  # 슬래시 커맨드 동기화
+            print(f"슬래시 커맨드 {len(synced)}개 동기화 완료!")
+        except Exception as e:
+            print(f"동기화 중 오류 발생: {e}")
 
     async def on_message(self, message):
         if message.author == self.user:
@@ -13,24 +18,29 @@ class Client(commands.Bot):
         #만약 메세지의 내용이 ('ㄲㅈ')로 시작한다면, 그 채널에 메세지 전송 sout같은 느낌 
         await check_profanity(message)
 
-    # async def on_reaction_add(self, reaction, user):
-    #     await reaction.message.channel.send('반응함 :)')  
-
-    
 
 intents = discord.Intents.all()
 intents.message_content = True
-client = Client(command_prefix="!", intents = intents) 
+client = Client(command_prefix="!", intents=intents)
 
-@client.tree.command(name="test1", description="test2")
-async def test3(interaction: discord.Interaction):
-    embed = discord.Embed(title="test4", color=0x00ff00)
-    embed.add_field(name="test5", value="test6", inline=False)
+
+@client.tree.command(name="티어리스트", description="모든 티어를 확인합니다!")
+async def tierlist(interaction: discord.Interaction):
+
+    embed = discord.Embed(
+        title="🏆 티어 리스트",
+        description="각 티어의 조건과 달성 여부를 확인하세요!",
+        color=0xFFD700,  # 골드 색상
+    )
+
+    embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
+    
+    embed.set_image(url="https://mblogthumb-phinf.pstatic.net/MjAyMjA2MjVfNjcg/MDAxNjU2MTUyMTk5NTE4.H-5iKkgvc3pUjoWHlaP1BHfVL4oa062eU371X0peVhcg.Wou7mfryOQZjeXn6FIU--6OWJUYCqzzeezLtmIH2-pgg.PNG.didcjddns/ranked-infographic-league-of-legends-season-12-for-Loc-2-of-5_KR.png?type=w800")
+    embed.add_field(name="🔰 브론즈", value="50회 욕설 사용", inline=False)
+    embed.add_field(name="🥈 실버", value="100회 욕설 사용", inline=False)
+    embed.add_field(name="🥇 골드", value="200회 욕설 사용", inline=False)
+    embed.add_field(name="💎 플래티넘", value="500회 욕설 사용", inline=False)
+    embed.add_field(name="🔥 다이아몬드", value="1000회 욕설 사용", inline=False)
     await interaction.response.send_message(embed=embed)
-
-#슬래시 코맨드 작성법 ex) !음악 !스킵 (슬래시 코맨드란 !해서 입력하는 코맨드 명령어)
-@client.tree.command(name = "hello", description="say hello")  #무슨 커맨드인지 이거로 예시를 들자면 !hello 하고 밑에 설명에 무슨 커맨드인지 description
-async def sayHello(interaction: discord.Interaction):
-    await interaction.response.send_message("hi there!") #
 
 client.run('')
