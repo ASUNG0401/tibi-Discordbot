@@ -5,9 +5,24 @@ from discord import app_commands
 from profanity_filter import check_profanity  # 비속어 감지 모듈 import
 from dotenv import load_dotenv
 from dotenv import load_dotenv
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 
 load_dotenv()
+
+
+
+
+uri = (os.getenv("URI"))
+
+client = MongoClient(uri)
+db = client.user_messages
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
 
 class Client(commands.Bot):
     async def on_ready(self):
@@ -21,9 +36,14 @@ class Client(commands.Bot):
     async def on_message(self, message):
         if message.author == self.user:  # 무한 반복 방지 코드.
             return 
-        #만약 메세지의 내용이 ('ㄲㅈ')로 시작한다면, 그 채널에 메세지 전송 sout같은 느낌 
-        check = await check_profanity(message)
 
+        db.server_messages_log.insert_one(
+            {
+                "message": message.content,
+                "author": message.author.id,
+            }
+        )
+        await check_profanity(message)
 intents = discord.Intents.all()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
