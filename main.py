@@ -1,7 +1,15 @@
 import discord
+import os
+import pymysql
 from discord.ext import commands
 from discord import app_commands
 from profanity_filter import check_profanity  # 비속어 감지 모듈 import
+from dotenv import load_dotenv
+from dotenv import load_dotenv
+from Data import Connection #Data.py에서 만든 class사용하기 위해해
+
+load_dotenv()
+Connection = Connection()
 
 class Client(commands.Bot):
     async def on_ready(self):
@@ -16,7 +24,10 @@ class Client(commands.Bot):
         if message.author == self.user:  # 무한 반복 방지 코드.
             return 
         #만약 메세지의 내용이 ('ㄲㅈ')로 시작한다면, 그 채널에 메세지 전송 sout같은 느낌 
-        await check_profanity(message)
+        check = await check_profanity(message)
+
+        if check :
+            s
 
 
 intents = discord.Intents.all()
@@ -43,4 +54,5 @@ async def tierlist(interaction: discord.Interaction):
     embed.add_field(name="🔥 다이아몬드", value="1000회 욕설 사용", inline=False)
     await interaction.response.send_message(embed=embed)
 
-client.run('')
+
+client.run(os.getenv("TOKEN")) #이러면 토큰 숨기면서 쓸수 있을 듯듯
