@@ -13,7 +13,7 @@ class Client(commands.Bot):
             print(f"동기화 중 오류 발생: {e}")
 
     async def on_message(self, message):
-        if message.author == self.user:
+        if message.author == self.user:  # 무한 반복 방지 코드.
             return 
         #만약 메세지의 내용이 ('ㄲㅈ')로 시작한다면, 그 채널에 메세지 전송 sout같은 느낌 
         await check_profanity(message)
