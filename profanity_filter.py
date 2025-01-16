@@ -26,4 +26,5 @@ async def check_profanity(message: discord.Message):
     for profanity in profanities:
         if profanity in message.content:
             await message.channel.send(f'{message.author}님의 비속어 감지!')
-            break
+            return True
+    return False
