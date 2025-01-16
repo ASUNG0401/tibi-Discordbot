@@ -5,7 +5,9 @@ from discord import app_commands
 from profanity_filter import check_profanity  # 비속어 감지 모듈 import
 from dotenv import load_dotenv
 from dotenv import load_dotenv
-
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from Data import db
 
 load_dotenv()
 
@@ -21,9 +23,11 @@ class Client(commands.Bot):
     async def on_message(self, message):
         if message.author == self.user:  # 무한 반복 방지 코드.
             return 
-        #만약 메세지의 내용이 ('ㄲㅈ')로 시작한다면, 그 채널에 메세지 전송 sout같은 느낌 
+        
         check = await check_profanity(message)
-
+        if check:
+            db.add_point(message)
+        
 intents = discord.Intents.all()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
@@ -41,7 +45,6 @@ async def tierlist(interaction: discord.Interaction):
         description="각 티어의 조건과 달성 여부를 확인하세요!",
         color=0xFFD700,  # 골드 색상
     )
-
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
     embed.set_image(url="https://mblogthumb-phinf.pstatic.net/MjAyMjA2MjVfNjcg/MDAxNjU2MTUyMTk5NTE4.H-5iKkgvc3pUjoWHlaP1BHfVL4oa062eU371X0peVhcg.Wou7mfryOQZjeXn6FIU--6OWJUYCqzzeezLtmIH2-pgg.PNG.didcjddns/ranked-infographic-league-of-legends-season-12-for-Loc-2-of-5_KR.png?type=w800")
