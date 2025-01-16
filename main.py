@@ -7,22 +7,9 @@ from dotenv import load_dotenv
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-
+from Data import db
 
 load_dotenv()
-
-
-
-
-uri = (os.getenv("URI"))
-
-client = MongoClient(uri)
-db = client.user_messages
-try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
 
 class Client(commands.Bot):
     async def on_ready(self):
@@ -36,14 +23,11 @@ class Client(commands.Bot):
     async def on_message(self, message):
         if message.author == self.user:  # 무한 반복 방지 코드.
             return 
-
-        db.server_messages_log.insert_one(
-            {
-                "message": message.content,
-                "author": message.author.id,
-            }
-        )
-        await check_profanity(message)
+        
+        check = await check_profanity(message)
+        if check:
+            db.add_point(message)
+        
 intents = discord.Intents.all()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
@@ -61,7 +45,6 @@ async def tierlist(interaction: discord.Interaction):
         description="각 티어의 조건과 달성 여부를 확인하세요!",
         color=0xFFD700,  # 골드 색상
     )
-
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
     embed.set_image(url="https://mblogthumb-phinf.pstatic.net/MjAyMjA2MjVfNjcg/MDAxNjU2MTUyMTk5NTE4.H-5iKkgvc3pUjoWHlaP1BHfVL4oa062eU371X0peVhcg.Wou7mfryOQZjeXn6FIU--6OWJUYCqzzeezLtmIH2-pgg.PNG.didcjddns/ranked-infographic-league-of-legends-season-12-for-Loc-2-of-5_KR.png?type=w800")
