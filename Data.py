@@ -1,20 +1,28 @@
 from pymongo import MongoClient
-import os #깃허브에 올렸을 때 사람들이 데이터베이스 정보 못보게 하기 위함(pip 필요없음)
+import os
 from dotenv import load_dotenv
+import discord
 
-load_dotenv()  #<- .env 파일 생성해서 민감한 정보 숨겨서 저장 이걸로 토큰도 숨길수 있을 듯? https://hyunhp.tistory.com/718
-               #여기서 생성한 .env파일을 깃에서  push할 때 못 올리게 gitignore를 만들어서 숨겨줄거임 https://velog.io/@jisu243/env%ED%8C%8C%EC%9D%BC-.gitignore%EB%A1%9C-%EC%95%88%EB%B3%B4%EC%9D%B4%EA%B2%8C-%EB%A7%8C%EB%93%A4%EA%B8%B0
-class db :
+load_dotenv()  # 환경변수 로드
+
+class db:
+    # MongoDB 연결을 한 번만 시도하고 재사용
+    client = None
+
+    @staticmethod
     def connect_mongodb():
-        uri = (os.getenv("URI"))   
-        client = MongoClient(uri)
-        try:
-            client.admin.command('ping')
-            print("Pinged your deployment. You successfully connected to MongoDB!")
-            return client
-        except Exception as e:
-            print(e)
-            return None
+        if db.client is None:
+            uri = os.getenv("URI")
+            db.client = MongoClient(uri)
+            try:
+                db.client.admin.command('ping')
+                print("Pinged your deployment. You successfully connected to MongoDB!")
+            except Exception as e:
+                print(e)
+                db.client = None
+        return db.client
+
+    @staticmethod
     def add_point(message):
         client = db.connect_mongodb()
         if not client:
@@ -25,8 +33,8 @@ class db :
         database = client["User"]
         collection = database["UserInfo"]
 
-        # 사용자 검색
         try:
+            # 사용자 검색
             user = collection.find_one({"user_id": str(message.author.id)})
             if user:
                 # 기존 유저의 Points 값을 증가
@@ -36,6 +44,8 @@ class db :
                     {"$set": {"Points": new_points}}
                 )
                 print(f"Updated points for user {message.author.id} to {new_points}.")
+                if new_points == 8 or new_points == 10 or new_points == 12 or new_points == 14:
+                    db.Update_rank(message, message.author.id, new_points)
             else:
                 # 새로운 유저 데이터 추가
                 user_data = {
@@ -48,21 +58,70 @@ class db :
         except Exception as e:
             print(f"Error updating or inserting user: {e}")
 
-    def find_User(id):
+    @staticmethod
+    def Get_rank(id):
         client = db.connect_mongodb()
+        if not client:
+            return None
 
         database = client["User"]
         collection = database["UserInfo"]
-        
         try:
-            user = collection.find_one({"user_id":str(id)})
+            user = collection.find_one({"user_id": str(id)})    # 고유 ID로 유저 찾기
             if user:
-                return True
+                return user.get("Tier")
             else:
-                return False
+                print(f"No rank found for user: {id}")
+                return None
         except Exception as e:
+            print(f"Error fetching rank for user {id}: {e}")
             return None
-    
 
+    @staticmethod
+    def Update_rank(message, id, points):
+        client = db.connect_mongodb()
+        if not client:
+            print("Database connection failed.")
+            return
 
-    
+        database = client["User"]
+        collection = database["UserInfo"]
+
+        # 포인트에 따른 새로운 티어 계산
+        if points > 13:
+            new_tier = "Platinum"
+        elif points > 11:
+            new_tier = "Gold"
+        elif points > 9:
+            new_tier = "Silver"
+        elif points > 7:
+            new_tier = "Bronze"
+        else:
+            return  # 등급이 변하지 않음
+
+        try:
+            # 사용자의 Tier 값을 업데이트
+            collection.update_one(
+                {"user_id": str(id)},
+                {"$set": {"Tier": new_tier}}
+            )
+            print(f"Updated rank for user {id} to {new_tier}.")
+        except Exception as e:
+            print(f"Error updating rank for user {id}: {e}")
+    def Get_points(id):
+        client = db.connect_mongodb()
+        if not client:
+            print("Database connection failed.")
+            return
+        database = client["User"]
+        collection = database["UserInfo"]
+        try:
+            user = collection.find_one({"user_id": str(id)})    # 고유 ID로 유저 찾기
+            if user:
+                return user.get("Points")
+            else:
+                print(f"No Point found for user: {id}")
+                return None
+        except Exception as e:
+            print(f"Error fetching Point for user {id}: {e}")
+            return None
