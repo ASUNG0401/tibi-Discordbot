@@ -43,7 +43,7 @@ async def tierlist(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🏆 티어 리스트",
         description="각 티어의 조건과 달성 여부를 확인하세요!",
-        color=0xFFD700,  # 골드 색상
+        color=0x580068,  # 골드 색상
     )
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
@@ -61,54 +61,78 @@ async def help(interaction: discord.Interaction):
     embed = discord.Embed(
         title="명령어 리스트",
         description="다음과 같은 명령어가 존재합니다!",
-        color=0xFFD700,  # 골드 색상
+        color=0x580068,  # 골드 색상
     )
 
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
-    embed.add_field(name="티어리스트", value="모든 티어를 확인합니다!", inline=False)
-    embed.add_field(name="현재티어", value="본인의 티어를 확인합니다!", inline=False)
-    embed.add_field(name="티어랭킹", value="욕 티어 TOP5 랭킹을 보여줍니다!", inline=False)
-    embed.add_field(name="도움말", value="모든 명령어를 확인합니다!", inline=False)
+    embed.add_field(name="• /티어리스트", value="모든 티어를 확인합니다!", inline=False)
+    embed.add_field(name="• /현재티어", value="본인의 티어를 확인합니다!", inline=False)
+    embed.add_field(name="• /티어랭킹", value="비속어 사용 TOP5 랭킹을 보여줍니다!", inline=False)
+    embed.add_field(name="• /도움말", value="모든 명령어를 확인합니다!", inline=False)
     await interaction.response.send_message(embed=embed)
 
 
 @client.tree.command(name="현재티어", description="본인의 티어를 확인합니다!")
-async def help(interaction: discord.Interaction):
+async def present_tier(interaction: discord.Interaction):
     Tier = db.Get_rank(interaction.user.id)     #Get_rank에서 유저 id로 Tier가지고옴옴
     point = db.Get_points(interaction.user.id)
     if Tier !=None:                             #return값으로 유저가 있는지 없는 지 확인
         embed = discord.Embed(                  #있으면 티어 보여주고 없으면 else로로
             title="현재 티어 :" + Tier,
-            description=f"당신은 현재 상위 %입니다!\n욕 한 횟수: {point} 회",   #상위 몇 퍼센트 인지 어케 구하는지 생각할 필요 
-            color=0xFFD700,  # 골드 색상
+            description=f"\n욕 한 횟수: {point} 회",   #상위 몇 퍼센트 인지 어케 구하는지 생각할 필요 
+            color=0x580068,  # 골드 색상
         )
     else:
         embed = discord.Embed(
-        title="욕쟁이이를 찾을 수 없습니다" ,         #글 전부 다 임시임 그냥 생각나는대로 적은거라라
+        title="욕쟁이를 찾을 수 없습니다" ,         #글 전부 다 임시임 그냥 생각나는대로 적은거라라
         description="욕설을 한 번도 사용하지 않으셨군요 :)",   
-        color=0xFFD700,  # 골드 색상
+        color=0x580068,  # 골드 색상
         )
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
     await interaction.response.send_message(embed=embed)
 
-@client.tree.command(name="티어랭킹", description="욕 티어 TOP5 랭킹을 보여줍니다!")
-async def help(interaction: discord.Interaction):
+@client.tree.command(name="티어랭킹", description="비속어 사용 TOP5 랭킹을 보여줍니다!")
+async def tier_ranking(interaction: discord.Interaction):
+    server_id = interaction.guild.id
+    ranking = db.get_server_ranking(server_id)
+    Tier = db.Get_rank(interaction.user.id)
+
+    if not ranking:
+        await interaction.response.send_message("현재 서버에 랭킹 데이터가 없습니다!")
+        return
 
     embed = discord.Embed(
         title="티어 랭킹",
         description="현재 순위는 다음과 같습니다!",
-        color=0xFFD700,  # 골드 색상
+        color=0x580068,  # 골드 색상
     )
 
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
-    embed.add_field(name="1등 (닉네임)", value="(티어)", inline=False)
-    embed.add_field(name="2등 (닉네임)", value="(티어)", inline=False)
-    embed.add_field(name="3등 (닉네임)", value="(티어)", inline=False)
-    embed.add_field(name="4등 (닉네임)", value="(티어)", inline=False)
-    embed.add_field(name="5등 (닉네임)", value="(티어)", inline=False)
+    for i, user in enumerate(ranking):
+        user_id = int(user["user_id"])
+        points = user["Points"]
+        tier = user["Tier"]
+
+        # 사용자 닉네임 가져오기
+        member = interaction.guild.get_member(user_id)
+        if member:
+            username = member.display_name  # 서버 내 닉네임
+        else:
+            try:
+                # 서버 멤버가 아니면 글로벌 닉네임 가져오기
+                fetched_user = await client.fetch_user(user_id)
+                username = fetched_user.name
+            except Exception:
+                username = "알 수 없는 사용자"
+
+        embed.add_field(
+            name=f"{i + 1}등 {username}",
+            value=f"티어: {Tier}, 점수: {points}",
+            inline=False
+        )
 
     await interaction.response.send_message(embed=embed)
 

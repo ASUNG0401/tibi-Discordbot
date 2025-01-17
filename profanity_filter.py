@@ -25,6 +25,6 @@ async def check_profanity(message: discord.Message):
     # 비속어가 포함된 경우 처리
     for profanity in profanities:
         if profanity in message.content:
-            await message.channel.send(f'{message.author}님의 비속어 감지!')
+            await message.channel.send(f'티비가 {message.author}님의 비속어를 들었어요!')
             return True
     return False

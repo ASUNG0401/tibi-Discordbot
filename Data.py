@@ -35,12 +35,15 @@ class db:
 
         try:
             # 사용자 검색
-            user = collection.find_one({"user_id": str(message.author.id)})
+            user = collection.find_one({
+                "user_id": str(message.author.id),
+                "server_id": str(message.guild.id)
+                })
             if user:
                 # 기존 유저의 Points 값을 증가
                 new_points = user.get("Points", 0) + 1
                 collection.update_one(
-                    {"user_id": str(message.author.id)},
+                    {"user_id": str(message.author.id), "server_id": str(message.guild.id)},
                     {"$set": {"Points": new_points}}
                 )
                 print(f"Updated points for user {message.author.id} to {new_points}.")
@@ -50,6 +53,7 @@ class db:
                 # 새로운 유저 데이터 추가
                 user_data = {
                     "user_id": str(message.author.id),
+                    "server_id": str(message.guild.id),  
                     "Points": 1,
                     "Tier": "Unranked"
                 }
@@ -108,6 +112,7 @@ class db:
             print(f"Updated rank for user {id} to {new_tier}.")
         except Exception as e:
             print(f"Error updating rank for user {id}: {e}")
+
     def Get_points(id):
         client = db.connect_mongodb()
         if not client:
@@ -125,3 +130,25 @@ class db:
         except Exception as e:
             print(f"Error fetching Point for user {id}: {e}")
             return None
+        
+    @staticmethod
+    def get_server_ranking(server_id):
+        client = db.connect_mongodb()
+        #mongodb 잘 연결 됐는지 확인하기 위해서 if not client씀 
+        if not client:
+            print("Database connection failed.")
+            return []
+        #client에서 유저 그리고 유저안에서 유저인포 가져오기 
+        database = client["User"]
+        collection = database["UserInfo"]
+
+        try:
+            #유저의 서버 아이디를 찾고 (데이터 조회) 그리고 sort로 정렬함 정렬하기 위해서 points를 기준으로 
+            # 삼아 정렬하고 -1은 내림차순으로 정렬한다는 의미. 따라서 높은 점수부터 낮은 점수 순으로 정렬됨. 
+            # limit(5)은 상위 5명만 가져올거라 5까지 제한둔거
+            users = collection.find({"server_id": str(server_id)}).sort("Points", -1).limit(5)
+            #그 후, 정렬된 데이터를 리스트로 변환해서 반환함
+            return list(users)
+        except Exception as e:
+            print(f"Error fetching ranking for server {server_id}: {e}")
+            return []
