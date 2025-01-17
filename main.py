@@ -75,8 +75,9 @@ async def help(interaction: discord.Interaction):
 
 @client.tree.command(name="현재티어", description="본인의 티어를 확인합니다!")
 async def present_tier(interaction: discord.Interaction):
-    Tier = db.Get_rank(interaction.user.id)     #Get_rank에서 유저 id로 Tier가지고옴옴
-    point = db.Get_points(interaction.user.id)
+    server_id = interaction.guild.id
+    Tier = db.Get_rank(server_id,interaction.user.id)     #Get_rank에서 유저 id로 Tier가지고옴옴
+    point = db.Get_points(server_id,interaction.user.id)
     if Tier !=None:                             #return값으로 유저가 있는지 없는 지 확인
         embed = discord.Embed(                  #있으면 티어 보여주고 없으면 else로로
             title="현재 티어 :" + Tier,
@@ -97,7 +98,7 @@ async def present_tier(interaction: discord.Interaction):
 async def tier_ranking(interaction: discord.Interaction):
     server_id = interaction.guild.id
     ranking = db.get_server_ranking(server_id)
-    Tier = db.Get_rank(interaction.user.id)
+    Tier = db.Get_rank(server_id,interaction.user.id)
 
     if not ranking:
         await interaction.response.send_message("현재 서버에 랭킹 데이터가 없습니다!")

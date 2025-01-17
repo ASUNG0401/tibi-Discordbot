@@ -29,60 +29,59 @@ class db:
             print("Database connection failed.")
             return
 
-        # 데이터베이스와 컬렉션 설정
         database = client["User"]
         collection = database["UserInfo"]
 
+        server_id = str(message.guild.id)
+        user_id = str(message.author.id)
+
         try:
-            # 사용자 검색
-            user = collection.find_one({
-                "user_id": str(message.author.id),
-                "server_id": str(message.guild.id)
-                })
+            user = collection.find_one({"user_id": user_id,"server_id": server_id})
             if user:
-                # 기존 유저의 Points 값을 증가
+                # 기존 유저의 포인트 증가
                 new_points = user.get("Points", 0) + 1
                 collection.update_one(
-                    {"user_id": str(message.author.id), "server_id": str(message.guild.id)},
+                    {"server_id": server_id, "user_id": user_id},
                     {"$set": {"Points": new_points}}
                 )
-                print(f"Updated points for user {message.author.id} to {new_points}.")
-                if new_points == 8 or new_points == 10 or new_points == 12 or new_points == 14:
-                    db.Update_rank(message, message.author.id, new_points)
+                print(f"Updated points for user {user_id} in server {server_id} to {new_points}.")
+
+                if new_points in {8, 10, 12, 14}:
+                    db.Update_rank(server_id, user_id, new_points)
             else:
-                # 새로운 유저 데이터 추가
                 user_data = {
-                    "user_id": str(message.author.id),
-                    "server_id": str(message.guild.id),  
+                    "user_id": user_id,
+                    "server_id": server_id,
                     "Points": 1,
                     "Tier": "Unranked"
                 }
                 collection.insert_one(user_data)
-                print(f"Added new user {message.author.id} with 1 point.")
+                print(f"Added new user {user_id} in server {server_id} with 1 point.")
         except Exception as e:
             print(f"Error updating or inserting user: {e}")
 
     @staticmethod
-    def Get_rank(id):
+    def Get_rank(server_id, user_id):
         client = db.connect_mongodb()
         if not client:
             return None
 
         database = client["User"]
         collection = database["UserInfo"]
+
         try:
-            user = collection.find_one({"user_id": str(id)})    # 고유 ID로 유저 찾기
+            user = collection.find_one({"user_id": str(user_id),"server_id": str(server_id)})
             if user:
                 return user.get("Tier")
             else:
-                print(f"No rank found for user: {id}")
+                print(f"No rank found for user {user_id} in server {server_id}.")
                 return None
         except Exception as e:
-            print(f"Error fetching rank for user {id}: {e}")
+            print(f"Error fetching rank for user {user_id}: {e}")
             return None
 
     @staticmethod
-    def Update_rank(message, id, points):
+    def Update_rank(server_id, user_id, points):
         client = db.connect_mongodb()
         if not client:
             print("Database connection failed.")
@@ -91,7 +90,6 @@ class db:
         database = client["User"]
         collection = database["UserInfo"]
 
-        # 포인트에 따른 새로운 티어 계산
         if points > 13:
             new_tier = "Platinum"
         elif points > 11:
@@ -101,34 +99,36 @@ class db:
         elif points > 7:
             new_tier = "Bronze"
         else:
-            return  # 등급이 변하지 않음
+            return 
 
         try:
-            # 사용자의 Tier 값을 업데이트
             collection.update_one(
-                {"user_id": str(id)},
+                {"user_id": str(user_id),"server_id": str(server_id),},
                 {"$set": {"Tier": new_tier}}
             )
-            print(f"Updated rank for user {id} to {new_tier}.")
+            print(f"Updated rank for user {user_id} in server {server_id} to {new_tier}.")
         except Exception as e:
-            print(f"Error updating rank for user {id}: {e}")
+            print(f"Error updating rank for user {user_id}: {e}")
 
-    def Get_points(id):
+    @staticmethod
+    def Get_points(server_id, user_id):
         client = db.connect_mongodb()
         if not client:
             print("Database connection failed.")
-            return
+            return None
+
         database = client["User"]
         collection = database["UserInfo"]
+
         try:
-            user = collection.find_one({"user_id": str(id)})    # 고유 ID로 유저 찾기
+            user = collection.find_one({"user_id": str(user_id),"server_id": str(server_id)})
             if user:
                 return user.get("Points")
             else:
-                print(f"No Point found for user: {id}")
+                print(f"No points found for user {user_id} in server {server_id}.")
                 return None
         except Exception as e:
-            print(f"Error fetching Point for user {id}: {e}")
+            print(f"Error fetching points for user {user_id}: {e}")
             return None
         
     @staticmethod
