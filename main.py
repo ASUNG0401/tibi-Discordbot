@@ -75,13 +75,20 @@ async def help(interaction: discord.Interaction):
 
 @client.tree.command(name="현재티어", description="본인의 티어를 확인합니다!")
 async def help(interaction: discord.Interaction):
-
-    embed = discord.Embed(
-        title="현재 티어 :" + "(데이터베이스 티어 보여줘야함)",
-        description="당신은 현재 상위 %입니다!",
+    Tier = db.Get_rank(interaction.user.id)     #Get_rank에서 유저 id로 Tier가지고옴옴
+    point = db.Get_points(interaction.user.id)
+    if Tier !=None:                             #return값으로 유저가 있는지 없는 지 확인
+        embed = discord.Embed(                  #있으면 티어 보여주고 없으면 else로로
+            title="현재 티어 :" + Tier,
+            description=f"당신은 현재 상위 %입니다!\n욕 한 횟수: {point} 회",   #상위 몇 퍼센트 인지 어케 구하는지 생각할 필요 
+            color=0xFFD700,  # 골드 색상
+        )
+    else:
+        embed = discord.Embed(
+        title="욕쟁이이를 찾을 수 없습니다" ,         #글 전부 다 임시임 그냥 생각나는대로 적은거라라
+        description="욕설을 한 번도 사용하지 않으셨군요 :)",   
         color=0xFFD700,  # 골드 색상
-    )
-
+        )
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
     await interaction.response.send_message(embed=embed)
