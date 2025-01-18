@@ -46,7 +46,7 @@ class db:
                 )
                 print(f"Updated points for user {user_id} in server {server_id} to {new_points}.")
 
-                if new_points in {8, 10, 12, 14}:
+                if new_points in {50, 100, 200, 500, 1000, 10000}:
                     db.Update_rank(server_id, user_id, new_points)
             else:
                 user_data = {
@@ -90,13 +90,17 @@ class db:
         database = client["User"]
         collection = database["UserInfo"]
 
-        if points > 13:
+        if points > 9999:
+            new_tier = "Master"
+        elif points > 999:
+            new_tier = "Diamond"
+        elif points > 499:
             new_tier = "Platinum"
-        elif points > 11:
+        elif points > 199:
             new_tier = "Gold"
-        elif points > 9:
+        elif points > 99:
             new_tier = "Silver"
-        elif points > 7:
+        elif points > 49:
             new_tier = "Bronze"
         else:
             return 
