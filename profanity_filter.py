@@ -1,8 +1,6 @@
 import discord
 
-# 비속어 감지 기능을 분리한 함수
 async def check_profanity(message: discord.Message):
-    # 감지할 비속어 리스트. 여기에 계속 추가 하면 됨 비속어들 
     profanities = profanities = [
     # 짧은 형태
     "ㅅㅂ", "ㅆㅂ", "ㅈㄹ", "ㄲㅈ", "ㅈㄴ", "ㅈ같네", "ㅄ", "ㅂㅅ", "ㅁㅊ", "ㅂㅅ같은", "ㄷㅊ", "ㅗ", "ㄱㅅㄲ", "ㄳㄲ",
