@@ -26,7 +26,7 @@ class Client(commands.Bot):
         
         check = await check_profanity(message)
         if check:
-            db.add_point(message)
+           await db.add_point(message)
         
 intents = discord.Intents.all()
 intents.message_content = True

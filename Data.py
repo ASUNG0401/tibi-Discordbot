@@ -23,7 +23,7 @@ class db:
         return db.client
 
     @staticmethod
-    def add_point(message):
+    async def add_point(message):
         client = db.connect_mongodb()
         if not client:
             print("Database connection failed.")
@@ -36,7 +36,7 @@ class db:
         user_id = str(message.author.id)
 
         try:
-            user = collection.find_one({"user_id": user_id,"server_id": server_id})
+            user = collection.find_one({"user_id": user_id, "server_id": server_id})
             if user:
                 # 기존 유저의 포인트 증가
                 new_points = user.get("Points", 0) + 1
@@ -46,8 +46,12 @@ class db:
                 )
                 print(f"Updated points for user {user_id} in server {server_id} to {new_points}.")
 
-                if new_points in {50, 100, 200, 500, 1000, 10000}:
-                    db.Update_rank(server_id, user_id, new_points)
+                # 티어 변경이 필요한 경우
+                new_tier = db.Update_rank(server_id, user_id, new_points)
+                if new_tier:
+                    await message.channel.send(
+                        f"🎉 <@{user_id}> 님이 **{new_tier}** 티어로 승급했습니다! 축하합니다! 🎉"
+                    )
             else:
                 user_data = {
                     "user_id": user_id,
@@ -111,6 +115,7 @@ class db:
                 {"$set": {"Tier": new_tier}}
             )
             print(f"Updated rank for user {user_id} in server {server_id} to {new_tier}.")
+            return new_tier;
         except Exception as e:
             print(f"Error updating rank for user {user_id}: {e}")
 
