@@ -47,7 +47,6 @@ async def tierlist(interaction: discord.Interaction):
     )
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
-    embed.set_image(url="https://mblogthumb-phinf.pstatic.net/MjAyMjA2MjVfNjcg/MDAxNjU2MTUyMTk5NTE4.H-5iKkgvc3pUjoWHlaP1BHfVL4oa062eU371X0peVhcg.Wou7mfryOQZjeXn6FIU--6OWJUYCqzzeezLtmIH2-pgg.PNG.didcjddns/ranked-infographic-league-of-legends-season-12-for-Loc-2-of-5_KR.png?type=w800")
     embed.add_field(name="🔰 브론즈", value="50회 욕설 사용", inline=False)
     embed.add_field(name="🥈 실버", value="100회 욕설 사용", inline=False)
     embed.add_field(name="🥇 골드", value="200회 욕설 사용", inline=False)
@@ -100,7 +99,6 @@ async def present_tier(interaction: discord.Interaction):
 async def tier_ranking(interaction: discord.Interaction):
     server_id = interaction.guild.id
     ranking = db.get_server_ranking(server_id)
-    # Tier = db.Get_rank(server_id,interaction.user.id)
 
     if not ranking:
         await interaction.response.send_message("현재 서버에 랭킹 데이터가 없습니다!")
@@ -139,8 +137,5 @@ async def tier_ranking(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-
-
-
-
 client.run(os.getenv("TOKEN")) #이러면 토큰 숨기면서 쓸수 있을 듯듯
+
