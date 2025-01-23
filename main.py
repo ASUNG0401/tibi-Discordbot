@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from Data import db
+import aiohttp
 
 load_dotenv()
 
@@ -32,6 +33,52 @@ intents = discord.Intents.all()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
 
+@client.tree.command(name="봇상태", description="봇의 상태를 확인합니다!")
+async def search(interaction: discord.Interaction, query: str):
+    url = "https://koreanbots.dev/api/v2/search/bots"  # v2 버전 사용
+    params = {
+        "query": query,
+        "page": 1
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                bots = data["data"]["data"]
+
+                if bots:
+                    # 검색 결과 메시지 생성
+                    embed = discord.Embed(title=f"'{query}' 검색 결과", color=discord.Color.blue())
+                    for bot in bots[:5]:  # 상위 5개만 표시
+                        embed.add_field(
+                            name=bot["name"],
+                            value=f"**설명:** {bot['desc'][:100]}...\n**서버 수:** {bot['servers']}\n**투표 수:** {bot['votes']}",
+                            inline=False
+                        )
+                    await interaction.response.send_message(embed=embed)
+                else:
+                    await interaction.response.send_message("검색 결과가 없습니다.")
+            else:
+                await interaction.response.send_message(f"API 호출 실패: {response.status}")
+
+async def update_bot_servers(bot_id, server_count):
+    url = f"https://koreanbots.dev/api/v2/bots/{1328634323766738944}/servers"
+    headers = {
+        "Authorization": "YOUR_BOT_API_KEY"
+    }
+    data = {
+        "servers": server_count
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=data, headers=headers) as response:
+            if response.status == 200:
+                print("서버 수 업데이트 성공!")
+            else:
+                print(f"서버 수 업데이트 실패: {response.status}")
+
+
+
 @client.tree.command(name="티어리스트", description="모든 티어를 확인합니다!")
 async def tierlist(interaction: discord.Interaction):
 
@@ -42,12 +89,12 @@ async def tierlist(interaction: discord.Interaction):
     )
     embed.set_footer(text="요청자: {}".format(interaction.user.display_name))
 
-    embed.add_field(name="🔰 브론즈", value="50회 욕설 사용", inline=False)
-    embed.add_field(name="🥈 실버", value="100회 욕설 사용", inline=False)
-    embed.add_field(name="🥇 골드", value="200회 욕설 사용", inline=False)
-    embed.add_field(name="💎 플래티넘", value="500회 욕설 사용", inline=False)
-    embed.add_field(name="🔥 다이아몬드", value="1000회 욕설 사용", inline=False)
-    embed.add_field(name="🏆 마스터", value="10000회 욕설 사용", inline=False)
+    embed.add_field(name="🔰 브론즈", value="50회 비속어 사용", inline=False)
+    embed.add_field(name="🥈 실버", value="100회 비속어 사용", inline=False)
+    embed.add_field(name="🥇 골드", value="200회 비속어 사용", inline=False)
+    embed.add_field(name="💎 플래티넘", value="500회 비속어 사용", inline=False)
+    embed.add_field(name="🔥 다이아몬드", value="1000회 비속어 사용", inline=False)
+    embed.add_field(name="🏆 마스터", value="10000회 비속어 사용", inline=False)
     await interaction.response.send_message(embed=embed)
 
 @client.tree.command(name="도움말", description="모든 명령어를 확인합니다!")
